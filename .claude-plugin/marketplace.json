@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "hyva",
+  "name": "synolia-hyva",
   "description": "Hyvä (Magento 2) theme skills for Claude",
   "owner": {
     "name": "Synolia"

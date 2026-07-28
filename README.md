@@ -2,7 +2,7 @@
 
 Public **Claude Code** plugin marketplace by Synolia / Blackbird for Hyvä (Magento 2) theme development.
 
-- **Marketplace**: `hyva`
+- **Marketplace**: `synolia-hyva`
 - **Repo**: `blackbird-agency/hyva-marketplace`
 
 ## Available plugins
@@ -20,7 +20,7 @@ In the project's `.claude/settings.json`:
 ```json
 {
   "enabledPlugins": {
-    "hyva@hyva": true
+    "hyva@synolia-hyva": true
   }
 }
 ```
