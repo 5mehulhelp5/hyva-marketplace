@@ -1,0 +1,13 @@
+{
+  "name": "hyva-upgrade-front-check-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Diff engines (pixel + semantic DOM) and in-container capture script for the hyva-upgrade-front-check skill. All pure JS, no native dependency: browsers are NOT bundled here -- screenshots are captured by the ephemeral Playwright container (PNG expected; JPEG accepted defensively via jpeg-js).",
+  "type": "commonjs",
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0",
+    "playwright-core": "1.61.1"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "before": { "baseUrl": "https://example-before.test" },
+  "after": { "baseUrl": "https://example.test" },
+  "viewports": {
+    "mobile": { "width": 375, "height": 812, "isMobile": true, "hasTouch": true },
+    "desktop": { "width": 1440, "height": 900 }
+  },
+  "dismiss": [
+    { "action": "click", "selector": "[aria-label*='refuser' i], [aria-label*='decline' i], [id*='axeptio' i] button", "optional": true }
+  ],
+  "pages": [
+    {
+      "template": "home",
+      "path": "/",
+      "states": [
+        { "name": "menu-open", "steps": [{ "action": "click", "selector": "header button[aria-label*='menu' i]" }], "settleMs": 800 },
+        { "name": "hover-nav", "steps": [{ "action": "hover", "selector": "header nav a" }], "settleMs": 400 }
+      ]
+    },
+    {
+      "template": "product",
+      "path": "example-product.html",
+      "states": [
+        { "name": "minicart-open", "steps": [{ "action": "click", "selector": "#menu-cart-icon, [aria-label*='cart' i], [aria-label*='panier' i]" }], "settleMs": 1000 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "hyva",
+  "description": "Hyvä (Magento 2) theme skills for Claude",
+  "owner": {
+    "name": "Synolia"
+  },
+  "plugins": [
+    {
+      "name": "hyva",
+      "source": "./hyva",
+      "description": "Skills thème Hyvä (Magento 2) : composants Alpine/UI/CMS, child theme, Tailwind, Playwright, scaffolding de module, rendu d'images média.",
+      "author": {
+        "name": "Synolia"
+      }
+    }
+  ]
+}

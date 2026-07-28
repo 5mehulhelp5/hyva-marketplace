@@ -1,0 +1,30 @@
+# Single source of the Tailwind v3 classes renamed/removed in v4.
+# Columns: name <TAB> replacement <TAB> tier <TAB> kind
+# kind=rename            -> class renamed 1:1 (auto-safe)
+# kind=removed-decoration-> decoration family removed, 1:1 (auto-safe)
+# kind=removed-opacity   -> *-opacity-* family removed -> modifier /<n> (needs-review, not 1:1)
+shadow-sm	shadow-xs	auto-safe	rename
+shadow	shadow-sm	auto-safe	rename
+drop-shadow-sm	drop-shadow-xs	auto-safe	rename
+drop-shadow	drop-shadow-sm	auto-safe	rename
+blur-sm	blur-xs	auto-safe	rename
+blur	blur-sm	auto-safe	rename
+backdrop-blur-sm	backdrop-blur-xs	auto-safe	rename
+backdrop-blur	backdrop-blur-sm	auto-safe	rename
+rounded-sm	rounded-xs	auto-safe	rename
+rounded	rounded-sm	auto-safe	rename
+outline-none	outline-hidden	auto-safe	rename
+ring	ring-3	auto-safe	rename
+flex-shrink-0	shrink-0	auto-safe	rename
+flex-shrink	shrink	auto-safe	rename
+flex-grow-0	grow-0	auto-safe	rename
+flex-grow	grow	auto-safe	rename
+overflow-ellipsis	text-ellipsis	auto-safe	rename
+decoration-slice	box-decoration-slice	auto-safe	removed-decoration
+decoration-clone	box-decoration-clone	auto-safe	removed-decoration
+bg-opacity	modifier /<n> (e.g. bg-white/50)	needs-review	removed-opacity
+text-opacity	modifier /<n>	needs-review	removed-opacity
+border-opacity	modifier /<n>	needs-review	removed-opacity
+divide-opacity	modifier /<n>	needs-review	removed-opacity
+ring-opacity	modifier /<n>	needs-review	removed-opacity
+placeholder-opacity	modifier /<n>	needs-review	removed-opacity
