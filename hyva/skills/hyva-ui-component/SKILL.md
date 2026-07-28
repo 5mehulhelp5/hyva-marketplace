@@ -1,6 +1,7 @@
 ---
 name: hyva-ui-component
 description: Apply Hyva UI template-based components to a Hyvä theme. This skill should be used when the user wants to add, install, or apply a Hyva UI component (such as header, footer, gallery, menu, minicart, etc.) to their Hyvä theme. It lists available non-CMS components and their variants, displays component README instructions, and copies component files to the theme directory.
+requires: hyva-exec-shell-cmd, hyva-theme-list, hyva-child-theme, hyva-compile-tailwind-css
 ---
 
 # Hyva UI Component
@@ -126,19 +127,17 @@ Modified files:
 
 ### 8.2: XML Configuration Table
 
-If XML configuration was added to `{theme_path}/etc/view.xml`, parse the XML block from the README and display a table of options:
+If XML configuration was added to `{theme_path}/etc/view.xml`, render a table of the
+options directly from the README's `<var>` block. For each `<var name="...">value</var>`
+entry, emit a row with these columns:
 
-```bash
-# Extract the XML config block from README and parse it
-php <skill_path>/scripts/parse_readme_xml.php --format=table < xml_block.txt
-```
+- **Option**: The full dotted option path (built from nested `<var>` names), with a
+  common leading segment stripped (e.g. `gallery.` → show `nav`, `magnifier.enable`)
+- **Value**: The default value between the tags
+- **Description**: The text of the trailing inline `<!-- ... -->` comment, if any
 
-The table shows each option with columns:
-- **Option**: The full option path without a common prefix (e.g., `magnifier.enable`)
-- **Value**: The default value configured
-- **Description**: Explanatory text from the XML comment
+Example output (common prefix like `gallery.` stripped):
 
-Example output (common prefix like `gallery.` is automatically stripped):
 ```
 Option               | Value      | Description
 ---------------------+------------+---------------------------------------------------
@@ -146,7 +145,7 @@ nav                  | thumbs     | Gallery navigation style (false/thumbs/count
 magnifier.enable     | false      | Turn on/off magnifier (true/false)
 ```
 
-For markdown output (e.g., when creating documentation), use `--format=md`.
+When creating documentation, render the same data as a Markdown table instead.
 
 ## Step 9: Final steps
 

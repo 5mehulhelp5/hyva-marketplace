@@ -1,27 +1,55 @@
 ---
 name: hyva-cms-components-dump
 description: Dump all Hyvä CMS components from active modules. This skill should be used when the user wants to list all CMS components, view available components, debug component configurations, or see the merged components.json output. Trigger phrases include "list cms components", "dump components", "show all components", "view cms components", "components.json dump".
+requires: hyva-exec-shell-cmd
 ---
 
 # Hyvä CMS Component Dump
 
-Locates all `components.json` files from Hyvä CMS modules and outputs a merged JSON object containing all component definitions from active modules.
+Lists the Hyvä CMS components available in a Magento 2 project, merged across active
+modules.
 
-## Usage
+**Command execution:** Use the `hyva-exec-shell-cmd` skill to detect the environment
+and determine the command wrapper. Run all commands below from the Magento project
+root.
 
-**Important:** Execute this script from the Magento project root directory.
+## Step 1: Prefer the bin/magento CLI commands
 
-Run the dump script:
+Modern Hyvä CMS ships console commands that report the live, project-accurate set of
+components (reflecting enabled state, plugins, and overrides). **Prefer these.**
+
+Check availability once, then use what exists:
 
 ```bash
-php <skill_path>/scripts/dump_cms_components.php
+# via the detected wrapper, e.g. warden env exec -T php-fpm bash -c "bin/magento list hyva:cms"
+bin/magento list hyva:cms
 ```
 
-Where `<skill_path>` is the directory containing this SKILL.md file (e.g., `.claude/skills/hyva-cms-components-dump`).
+- `bin/magento hyva:cms:describe-components` — describe enabled CMS components
+- `bin/magento hyva:cms:list-disabled-components` — list disabled CMS components
+
+These run through the standard `bin/magento` wrapper (in the project's dev container);
+no bundled script and no host PHP are involved.
+
+## Step 2: Fallback — bundled dump script
+
+If the `hyva:cms:*` commands are **not** available (older Hyvä CMS), fall back to the
+bundled `scripts/dump_cms_components.php`. It `require`s `app/etc/config.php`, so it
+needs a PHP interpreter — run it via the pattern documented in the
+`hyva-exec-shell-cmd` skill ("Running a Bundled Skill Script Inside the
+Environment"): stream the script into the interpreter over stdin, e.g.
+
+```bash
+# via the detected wrapper, working directory = project root
+cat <skill_path>/scripts/dump_cms_components.php | warden env exec -T php-fpm bash -c "php /dev/stdin"
+```
+
+and capture stdout. The script locates the Magento root via `getcwd()`, so no temp
+file, mount, or cleanup is involved.
 
 **Output format:** A single JSON object containing all merged CMS component definitions.
 
-## How It Works
+### How the fallback script works
 
 1. **Reads module configuration** from `app/etc/config.php` to get the ordered list of modules
 2. **Filters active modules** - only modules with value `1` are included (disabled modules are skipped)

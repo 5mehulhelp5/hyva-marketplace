@@ -1,6 +1,8 @@
 # Hyvä CMS Component Schema Reference
 
-> **Auto-generated file** - Run `scripts/update_component_schema.php` to regenerate from the Hyvä CMS JSON schema.
+> **Fallback snapshot.** When Hyvä Commerce is installed, read the live schema
+> directly from the project instead of this file. To refresh this snapshot, read the
+> `jsonschema/*.json` files below and regenerate the tables — no helper script needed.
 >
 > Schema source: `vendor/hyva-themes/commerce-module-cms/src/liveview-editor/etc/hyva_cms/jsonschema/`
 

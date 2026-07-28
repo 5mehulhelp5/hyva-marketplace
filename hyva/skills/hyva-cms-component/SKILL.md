@@ -1,6 +1,7 @@
 ---
 name: hyva-cms-component
 description: Create custom Hyvä CMS component. This skill should be used when the user wants to create a new Hyvä CMS component, build a Hyvä component, or needs help with components.json and PHTML templates for Hyvä CMS. Trigger phrases include "create hyva cms component", "add cms component", "new hyva component", "build page hyva cms element", "custom cms element".
+requires: hyva-exec-shell-cmd, hyva-create-module, hyva-cms-components-dump, hyva-render-media-image
 ---
 
 # Hyvä CMS Component Creator
@@ -58,6 +59,11 @@ Gather component information:
 ### Step 3: Field Selection
 
 Offer field presets or custom field creation. See `references/field-types.md` "Field Presets" section for available presets (Basic Card, Image Card, CTA Block, Text Block, Feature Item, Testimonial, Accordion Item) or allow custom field definition.
+
+**Authoritative field types:** prefer the project's live list when available — run
+`bin/magento hyva:cms:list-fields` (core + custom field types) via the
+`hyva-exec-shell-cmd` wrapper. Fall back to `references/field-types.md` only when the
+command is unavailable.
 
 For custom fields, iterate through each field asking:
 1. Field name (snake_case)
@@ -436,17 +442,23 @@ Complete end-to-end example showing a Feature Card component with:
 
 Read this file when you need a reference for how all the pieces fit together.
 
-### references/component-schema.md
+### Component/field schema (read from the project, with a bundled fallback)
 
-Complete schema reference for component declarations, auto-generated from the Hyvä CMS JSON schema. Includes:
-- Valid component-level properties
-- Field declaration properties
-- All field types
-- Validation attributes
+The Hyvä CMS schema is project-version-dependent. **Prefer the live schema from the
+installed Hyvä Commerce package:** if
+`vendor/hyva-themes/commerce-module-cms/src/liveview-editor/etc/hyva_cms/jsonschema/`
+exists, read its JSON files directly (no interpreter needed) for this project's
+authoritative component and field declarations:
+- `component-declaration.json` — valid component-level properties
+- `component-field-declaration.json` — field declaration properties, field types, validation attributes
 
-Read this file when validating component structure or when encountering schema validation errors.
+Only when Hyvä Commerce is **not** installed, fall back to the bundled
+`references/component-schema.md`. Read either source when validating component
+structure or when encountering schema validation errors.
 
-Run `scripts/update_component_schema.php` after Hyvä CMS updates to regenerate.
+> The bundled `references/component-schema.md` is a fallback snapshot. To refresh it
+> after a Hyvä CMS update, regenerate it by reading the `jsonschema/*.json` files
+> above — no helper script is required.
 
 ### references/field-types.md
 
@@ -480,10 +492,6 @@ Solutions for common issues including:
 - Fallbacks when dependent skills are unavailable
 
 Read this file when encountering errors during component creation or testing.
-
-### scripts/update_component_schema.php
-
-PHP script that reads the Hyvä CMS JSON schema files and regenerates `references/component-schema.md`. Run after upgrading `hyva-themes/commerce-module-cms` to ensure documentation stays current.
 
 ### assets/templates/component/template.phtml.tpl
 
