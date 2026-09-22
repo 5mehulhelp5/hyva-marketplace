@@ -134,16 +134,17 @@ compare **values**. Read the computed style of a rendered element, not the CSS s
 
 ## 6. Component contracts — `--btn-*`
 
-Hyvä's button follows a variable contract: **the variant declares only variables, `.btn` does the
-wiring**. Vendor variants (`pagebuilder-button-primary`, `.ais-ClearRefinements-button`,
-`.actions-toolbar .primary button`…) use it, so a conforming custom variant composes with them.
+**Mirror vendor by default.** The migration brings the old infrastructure onto the new vendor contract,
+it does not build a parallel one beside it. Keep vendor's variable names, its state selectors and its
+structure, so the next upgrade arrives as a readable diff. Deviate only where the evidence below forces
+it, and say so in a comment.
 
-Available: `--btn-bg`, `--btn-stroke`, `--btn-color`, plus the same triplet prefixed `--btn-hover-*`,
-`--btn-active-*`, `--btn-focus-*`, `--btn-disabled-*`. An undeclared state falls back to the base state.
+The contract: **`.btn` does the wiring; variants supply `--btn-*`.** Available: `--btn-bg`,
+`--btn-stroke`, `--btn-color`, plus the same triplet prefixed `--btn-hover-*`, `--btn-active-*`,
+`--btn-focus-*`, `--btn-disabled-*`.
 
 ```css
 @utility btn-ghost {
-    @apply border;                      /* border WIDTH stays on the variant */
     --btn-bg: transparent;
     --btn-stroke: var(--color-dark-lighter);
     --btn-color: var(--color-fg);
@@ -151,22 +152,45 @@ Available: `--btn-bg`, `--btn-stroke`, `--btn-color`, plus the same triplet pref
 }
 ```
 
-**Never declare `--btn-*` on `.btn` itself — including when the vendor file does.** The shipped
-`components/button.css` sets `--btn-bg`, `--btn-stroke`, `--btn-color`, `--btn-hover-bg` and
-`--btn-active-bg` on the `@utility btn` base. Tailwind emits `.btn` *after* variants declared later in
-the file; both are single-class selectors, so the later one wins and **every variant's colours are
-overridden** — buttons render transparent. Defaults belong in the `var()` fallbacks
-(`var(--btn-bg, transparent)`), never on the base.
+### The one place vendor's own file is a trap
 
-**`border-width` moves to the variants — which means deleting it from the base, not just adding it to
-each variant.** The vendor base hardcodes `border-width: 2px`. Leave it there and a variant's `@apply
-border` is a competing utility declaration of the same property, so emit order decides the rendered
-width, not your variant; and any borderless variant (`border-none`) is still shifted by 1–2px. Adopting
-the contract means the base declares `border-color: var(--btn-stroke, transparent)` and **no**
-`border-width` at all.
+Vendor declares `--btn-*` **defaults on the `@utility btn` base**. Base and variant are both
+single-class selectors, so whichever Tailwind emits **later** wins — and **`@utility` emit order is not
+source order**. Vendor's own `btn-primary`/`btn-secondary` happen to sort after the base, so vendor's
+file is self-consistent. A custom variant may not.
 
-After building, confirm it: resolve `.btn.btn-ghost`'s computed `border-width` in the browser rather
-than assuming the variant won.
+Measured on a real theme, all five declared in one file with `btn` first:
 
-Call-site overrides still work — Tailwind sorts custom `@utility` **before** native utilities, so
+| emitted at | utility | source line |
+|---|---|---|
+| 63 995 | `.btn-sizing` | 94 |
+| 76 068 | `.btn` (base) | 1 |
+| 79 294 | `.btn-tool` | — |
+| 97 097 | `.btn-secondary` | — |
+| 97 651 | `.btn-primary` | — |
+
+`btn-sizing` is declared 93 lines *after* the base and still emitted 12 KB *before* it. Had the base
+carried `--btn-bg`, that variant would have been silently overridden and rendered transparent — which
+is exactly how a product-page size selector went missing on the theme measured here.
+
+**So: check, don't assume.** After adding or re-homing a variant:
+
+```bash
+/usr/bin/grep -bo -E '\.btn(-[a-z-]+)?\{' <THEME>/web/css/styles.css | sort -n | head
+```
+
+Every variant must appear **after** the base's offset. For any variant that does not, its `--btn-*`
+cannot be defended by the base's defaults, and you have two options:
+
+1. **Keep vendor's shape** and give that one variant `!important`-free protection by not relying on a
+   base default for the properties it sets — i.e. the base declares no default for them.
+2. **Move the defaults off the base entirely** into the `var()` fallbacks
+   (`background-color: var(--btn-bg, transparent)`), so no variant can ever be clobbered regardless of
+   order. This is a deviation from vendor; it is the robust option, and it is what a theme with many
+   custom variants will converge on. Record why in a comment at the top of the file.
+
+The same applies to `border-width`: vendor hardcodes `2px` on the base, so a variant that wants a
+different width (or `border-none`) is fighting the base rather than configuring it.
+
+Call-site overrides work either way — Tailwind sorts custom `@utility` **before** native utilities, so
 `class="btn btn-secondary bg-surface"` beats `--btn-bg`. No variant needed for a one-off.

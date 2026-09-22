@@ -173,12 +173,14 @@ No `WORKDIR` provided:
 - **Keep the backups** (`web/tailwind.backup.<date>`) until QA sign-off — B and C both read them.
 - Changed defaults (border `currentColor`, ring, placeholder, button cursor) are **not** detectable
   by the scan (cat. 7 of the catalogue) → visual check in QA.
-- **Never declare `--btn-*` on the `.btn` base — even though the vendor file does.** Tailwind emits
-  `.btn` after variants declared later; same specificity, so the base wins and every variant's colours
-  are overridden (buttons render transparent). Defaults belong in the `var()` fallbacks, border-width on
-  the variants. See `references/hyva-semantic-contract.md` §6.
 - **Reserved Hyvä names are a contract, not suggestions.** Redefining `primary`/`on-primary`/`surface`/
   `ink`… with a new meaning breaks vendor templates you do not override, silently.
+- **Mirror vendor's component contracts — but `@utility` emit order is not source order.** Base and
+  variant are both single-class selectors, so the later-emitted one wins, and a variant can be emitted
+  *before* the base it is meant to configure. Where the base carries `--btn-*` defaults (as vendor's
+  does), such a variant is silently overridden. After adding or re-homing a variant, check it emits
+  after the base: `grep -bo -E '\.btn(-[a-z-]+)?\{' <THEME>/web/css/styles.css | sort -n`. See
+  `references/hyva-semantic-contract.md` §6 for the measured case and the two ways out.
 
 ## References
 - `references/migration-procedure.md` — detailed procedure + "why not npx"
