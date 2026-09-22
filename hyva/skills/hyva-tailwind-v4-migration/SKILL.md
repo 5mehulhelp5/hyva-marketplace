@@ -77,10 +77,32 @@ No `WORKDIR` provided:
      fonts), **dropping what v4 provides natively**. The **`@utility` plugins + animations
      (`--animate-*` + `@keyframes`) are NOT tokens** → move them into files under `utilities/`. Drop the
      `@import ".../generated/tailwind.config.css"`, that file, and (if still present) the dead `tailwind.config.js`.
-     **Remap the WHOLE semantic set** to the brand palette (primary/secondary triads,
-     on-primary/on-secondary, all `--form-*` incl. `--form-active-color`, `accent-color`) — not just
-     `--color-primary`. Namespace = `--color-*` **singular** (never `--colors-*`). Verify the
-     **browser-computed** color, not the source. *(ask before an off-palette shade)*
+     Namespace = `--color-*` **singular** (never `--colors-*`). *(ask before an off-palette shade)*
+     **Follow `references/hyva-semantic-contract.md` for this step** — it carries the five things that
+     fail silently here, in order:
+     1. **Read the contract from the installed package first** (`@hyva-themes/hyva-modules/css/theme.css`,
+        `fallback.css`, the vendor `button.css`). **Never infer a reserved variable name from its role** —
+        a guessed `--form-*`/`--color-*` name compiles clean and does nothing. Cannot read them? Say so
+        and stop; do not guess.
+     2. **One name = one colour.** v4 drops `--background-color-*`/`--text-color-*`/`--border-color-*`,
+        so a v3 theme that gave `primary` two meanings across those namespaces must pick one and sweep
+        every call site of the other.
+     3. **Do not redefine Hyvä's reserved names with a new meaning** (`primary`, `on-primary`,
+        `secondary`, `on-secondary`, `surface`, `background`, `ink`, `ink-muted`, `container*`) — vendor
+        templates you do not override rely on them; `bg-primary` + `text-on-primary` going white-on-white
+        is the signature failure.
+     4. **Palette and roles are two layers, not one.** Palette (literal colours) → `hyva.config.json`.
+        Roles (aliases: `fg-*`, `surface`, `bg`) → a `@theme` block in `tailwind-source.css` **after** the
+        `generated/` imports. JSON cannot hold `var()`, so a role in the palette means a duplicated hex
+        that will drift. Never declare the same token in both.
+     5. **The token group key IS the v4 namespace.** `font.sans` → `--font-sans` ✅; `fontFamily.sans` →
+        `--fontFamily-sans` ❌ dead. Likewise `text` not `fontSize`, `breakpoint` not `screens`. After
+        `npm run generate`, grep `generated/hyva-tokens.css` for the variable you expect.
+
+     Then **remap the whole semantic set** — not just `--color-primary` — and verify by **browser-computed
+     value**, never by name: `ring-`, `from-`, `to-`, `via-`, `outline-`, `fill-`, `divide-`, `accent-`
+     and `caret-` all read `--color-*`, so a rename reasoned over the `bg-`/`text-` families breaks
+     gradients and rings without a single visible diff.
    - **B. Re-home AND migrate every custom CSS file into the standard Hyvä tree.** Two duties — **do not
      skip the first**; it is the one the syntax scan can't do for you and the one most easily forgotten.
      - **Source.** The custom CSS lives either in the backup (`web/tailwind.backup.<date>`, when the
@@ -109,6 +131,18 @@ No `WORKDIR` provided:
      - **Merge rule.** For each file: **merge your custom into the matching native file** (same name — or a
        differently-named file playing the same role — **never keep both**), or **add a new custom file** in
        the right folder; **discard pure vendor copies**. No two files doing the same thing.
+     - **B3 — vendor drift + cascade sweep** (`references/post-rebase-regressions.md`). Two classes a
+       clean v4 conformance pass still misses, because your CSS did not change — its surroundings did.
+       **(a) Hyvä's own new defaults**: step 1 replaced `web/tailwind` with a fresh vendor copy, so the
+       theme now inherits every styling decision Hyvä made since your old version (sticky footer,
+       `.columns` capped by `container`, `--form-radius`, checkbox/radio sizing, account-nav…).
+       `diff -rq` the Phase 0 baseline against the new vendor tree, read each changed file you do **not**
+       override, and decide per item: adopt, or restate the declaration in your own file **with a comment
+       saying why**. Override the driving **token** rather than the rule where one exists.
+       **(b) Cascade shifts**: unlayered vendor sheets outrank every `@layer` at any specificity; a
+       selector list compiles to `:is(...)` and takes its strongest argument's specificity; `scale-*`
+       emits `scale`, not `transform`; `leading-*` sets `--tw-leading`, which later `text-*` prefers;
+       contradictory `@apply` (`border-0 border`) resolves by emit order, not source order.
      🔲 **Gate: review of migrated custom styles.**
    - **C. CSS stays a FULL vendor copy + configure the scan (Tailwind only).** `web/tailwind` keeps the
      SAME files as the new vendor v4 (content overridden + custom additions); **never delete a CSS file
@@ -121,7 +155,12 @@ No `WORKDIR` provided:
      `rounded`/`shadow`/`blur`, `outline-none`→`outline-hidden`, the border-color shim, arbitrary vars.
    - **E.** *(recommended)* Verification gate: compiled `styles.css` has the utilities used; native
      components branded (rest + hover/active/focus); no build warning (`Unknown at rule: @screen`);
-     a **vendor-only** `.phtml` class reaches `styles.css` (proof the parent scan works).
+     a **vendor-only** `.phtml` class reaches `styles.css` (proof the parent scan works). Also:
+     **build with `--minify`** — the optimizer is the only stage that reports invalid at-rules and
+     unresolvable `@import`s, so a `watch` build hides them; and open the **vendor templates that use the
+     reserved names** (`grep -rl --include=*.phtml -e bg-primary -e text-on-primary -e bg-surface` in the
+     vendor default theme — header counters, gift options, footer, breadcrumbs, mobile menu) to confirm
+     none renders same-on-same.
 3. **Rebuild**: delegate to the `hyva-compile-tailwind-css` skill (or `$HYVA_RUNNER` in
    `web/tailwind`). **Only in standalone mode** (in invoked mode, the orchestrator rebuilds in Phase 7);
    E's build-output items run after this rebuild.
@@ -134,9 +173,17 @@ No `WORKDIR` provided:
 - **Keep the backups** (`web/tailwind.backup.<date>`) until QA sign-off — B and C both read them.
 - Changed defaults (border `currentColor`, ring, placeholder, button cursor) are **not** detectable
   by the scan (cat. 7 of the catalogue) → visual check in QA.
+- **Never declare `--btn-*` on the `.btn` base — even though the vendor file does.** Tailwind emits
+  `.btn` after variants declared later; same specificity, so the base wins and every variant's colours
+  are overridden (buttons render transparent). Defaults belong in the `var()` fallbacks, border-width on
+  the variants. See `references/hyva-semantic-contract.md` §6.
+- **Reserved Hyvä names are a contract, not suggestions.** Redefining `primary`/`on-primary`/`surface`/
+  `ink`… with a new meaning breaks vendor templates you do not override, silently.
 
 ## References
 - `references/migration-procedure.md` — detailed procedure + "why not npx"
 - `references/tailwind-v4-breaking-changes.md` — catalogue of the transform categories
+- `references/hyva-semantic-contract.md` — reserved names, palette/roles layering, token namespaces, `--btn-*` (step A)
+- `references/post-rebase-regressions.md` — Hyvä vendor drift + v4 cascade/specificity traps (steps B3/D/E, QA)
 - `references/renamed-classes.tsv` — single source of renamed/removed classes (read by the scripts)
 - `references/doc-sources.md` — Tailwind & official Hyvä tools URLs

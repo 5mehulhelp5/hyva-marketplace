@@ -129,8 +129,21 @@ manual checklist.
    `.phtml`. Writes into the `WORKDIR`, **does not rebuild** (deferred to Phase 7), returns a recap
    (migrated files, defaults + branded native components to check in QA). 🔲 **Gate carried by the
    sub-skill (custom-styles review).**
-7. **Auto checks**: Tailwind build (`hyva-compile-tailwind-css` skill or `$HYVA_RUNNER` in
-   `web/tailwind`), `bin/magento setup:upgrade`, `cache:flush`, scan `var/log/*.log` and `var/report/`.
+   **Three acceptance criteria to check when closing that gate** — each fails silently, so ask for the
+   evidence rather than the assurance:
+   - **Reserved names read, not guessed.** The semantic set was taken from the *installed* package
+     (`@hyva-themes/hyva-modules/css/theme.css`, `fallback.css`, the vendor `button.css`), not inferred.
+     An invented `--form-*`/`--color-*` name compiles clean and does nothing.
+   - **Palette and roles kept in separate layers.** Literal colours in `hyva.config.json`; aliases
+     (`fg-*`, `surface`, `bg`) in a `@theme` block in `tailwind-source.css` after the `generated/`
+     imports. No token declared in both.
+   - **Vendor drift decided, not inherited.** The fresh vendor `web/tailwind` brings Hyvä's own new
+     defaults; each one is adopted deliberately or opted out with a comment. `diff -rq` against the
+     Phase 0 baseline is the evidence.
+7. **Auto checks**: Tailwind build **with `--minify`** (`hyva-compile-tailwind-css` skill or
+   `$HYVA_RUNNER` in `web/tailwind`) — the optimizer is the only stage that reports invalid at-rules and
+   unresolvable `@import`s, so a non-minified/`watch` build hides them —, `bin/magento setup:upgrade`,
+   `cache:flush`, scan `var/log/*.log` and `var/report/`.
    If Phase 6 ran, **close its verification gate (E) here** (post-build): the compiled `styles.css`
    contains the utilities used in the templates, **no build warning** (e.g. `Unknown at rule: @screen`),
    and a class present only in a non-overridden vendor `.phtml` reaches `styles.css` (proof the parent
@@ -146,6 +159,12 @@ manual checklist.
    produced here. Claude investigates the leftovers via Claude-in-Chrome, moves items to `[C]`
    (verified, to confirm) and **lets the user** validate to `[x]`, then proposes tearing the "before"
    env down. 🔲 **Gate carried by the sub-skill: QA sign-off.**
+   - **If Phase 6 ran, add two sweeps to the manifest**, both invisible to a code diff: (a) the
+      **vendor templates using the reserved names** — `grep -rl --include=*.phtml -e bg-primary
+      -e text-on-primary -e bg-surface` in the vendor default theme (header compare/wishlist counters,
+      gift options, footer, breadcrumbs, mobile menu) — confirming none renders same-on-same; (b) the
+      **Hyvä vendor-drift list** returned by Phase 6 (page height on short pages, `.columns` width and
+      sidebar tracks, form radius, checkbox/radio size, account nav).
    - **Fallback — no before env** (baseline snapshot skipped, or the front env could not be
       provisioned): produce a manual **front-end QA checklist** from the worklist + breaking changes
       (`references/qa-checklist.md` rules + `templates/qa-checklist.md`), as an artifact or a
