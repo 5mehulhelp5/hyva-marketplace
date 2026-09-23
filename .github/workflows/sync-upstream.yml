@@ -1,0 +1,45 @@
+name: sync-upstream
+
+# Mirrors hyva-themes/hyva-ai-tools skills into hyva/skills/ and opens (or updates) a PR
+# when upstream changed. No change upstream = no PR.
+on:
+  schedule:
+    - cron: '0 6 * * *'   # every day, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync skills from upstream
+        id: sync
+        run: |
+          out="$(./sync-upstream.sh)"
+          echo "$out"
+          echo "sha=$(echo "$out" | sed -n 's/^Synced from upstream .* @ //p')" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: hyva/skills
+          branch: chore/sync-upstream
+          delete-branch: true
+          commit-message: 'chore: sync hyva skills with upstream (${{ steps.sync.outputs.sha }})'
+          title: 'chore: sync hyva skills with upstream (${{ steps.sync.outputs.sha }})'
+          body: |
+            Automatic sync of `hyva/skills/` with [hyva-themes/hyva-ai-tools](https://github.com/hyva-themes/hyva-ai-tools) @ [`${{ steps.sync.outputs.sha }}`](https://github.com/hyva-themes/hyva-ai-tools/commit/${{ steps.sync.outputs.sha }}).
+
+            Review the diff before merging: `hyva/skills/` is an exact mirror of upstream (removed skills are removed here too).
+            If a skill used by `hyva-extras@synolia` was renamed or removed, update `synolia-marketplace/hyva-extras` accordingly.
+          labels: upstream-sync
+          reviewers: cg-blackbird
