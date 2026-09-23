@@ -9,7 +9,7 @@
     {
       "name": "hyva",
       "source": "./hyva",
-      "description": "Skills thème Hyvä (Magento 2) : composants Alpine/UI/CMS, child theme, Tailwind, Playwright, scaffolding de module, rendu d'images média.",
+      "description": "Skills thème Hyvä (Magento 2) : composants Alpine/UI/CMS, child theme, Tailwind, Playwright, scaffolding de module, rendu d'images média, icônes SVG, JS global et stores Alpine.",
       "author": {
         "name": "Synolia"
       }
