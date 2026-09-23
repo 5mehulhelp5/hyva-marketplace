@@ -9,7 +9,7 @@ Public Claude Code plugin marketplace maintained by Blackbird Agency. It repacka
 
 | Plugin | Content |
 |--------|---------|
-| `hyva` | Hyvä theme skills: Alpine/UI/CMS components, child theme, Tailwind, Playwright, module scaffolding, media image rendering |
+| `hyva` | Hyvä theme skills: Alpine/UI/CMS components, child theme, Tailwind, Playwright, module scaffolding, media image rendering, SVG icons, global JS and Alpine stores |
 
 ## Installation
 
