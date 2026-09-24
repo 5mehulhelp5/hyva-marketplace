@@ -4,7 +4,7 @@ name: sync-upstream
 # when upstream changed. No change upstream = no PR.
 on:
   schedule:
-    - cron: '0 6 * * *'   # every day, 06:00 UTC
+    - cron: '37 3 * * *'  # every day, 03:37 UTC (off-peak minute, avoids the top-of-hour rush)
   workflow_dispatch:
 
 permissions:
